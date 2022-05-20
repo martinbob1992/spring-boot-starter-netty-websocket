@@ -1,0 +1,6 @@
+spring:
+  redis:
+    host: 192.168.199.91
+    database: 14
+    password: yihai123
+    port: 6379
