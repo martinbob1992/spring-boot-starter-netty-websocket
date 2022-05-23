@@ -2,12 +2,19 @@ package com.marsh.websocket.config;
 
 import com.corundumstudio.socketio.AuthorizationListener;
 import com.corundumstudio.socketio.Configuration;
+import com.corundumstudio.socketio.SocketIOServer;
+import com.corundumstudio.socketio.listener.ConnectListener;
+import com.corundumstudio.socketio.listener.DisconnectListener;
 import com.corundumstudio.socketio.listener.ExceptionListener;
+import com.marsh.websocket.hook.WebsocketShutdownHook;
 import com.marsh.websocket.interfaces.ISocketIOConfigBeanPostProcessor;
+import com.marsh.websocket.properties.WebsocketProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -21,24 +28,41 @@ import java.util.List;
  */
 @Slf4j
 @org.springframework.context.annotation.Configuration
+@EnableConfigurationProperties(WebsocketProperties.class)
 @ComponentScan("com.marsh.websocket")
-public class SocketIOConfiguration extends ApplicationObjectSupport {
-
-    @Value("${socket.hostname:localhost}")
-    private String hostname;
-    @Value("${socket.port:9092}")
-    private Integer port;
+public class SocketIOAutoConfiguration extends ApplicationObjectSupport {
 
     @Autowired(required = false)
     private List<ISocketIOConfigBeanPostProcessor> socketIOConfigBeanPostProcessors;
+    @Autowired(required = false)
+    private List<ConnectListener> connectListeners;
+    @Autowired(required = false)
+    private List<DisconnectListener> disconnectListeners;
 
-
-    @ConditionalOnMissingBean(Configuration.class)
     @Bean
-    public Configuration socketIOConfig(){
-        Configuration socketIOConfig = new Configuration();
+    public SocketIOServer socketIOServer(WebsocketProperties config){
+        deployExceptionListener(config);
+        deployAuthorizationListener(config);
+        beanPostProcessor(config);
+
+        SocketIOServer server = new SocketIOServer(config);
+        if (connectListeners != null && connectListeners.size() > 0){
+            connectListeners.stream().forEach(server::addConnectListener);
+        }
+        if (disconnectListeners != null && disconnectListeners.size() > 0){
+            disconnectListeners.stream().forEach(server::addDisconnectListener);
+        }
+        // 程序退出时，关闭网络连接，清理资源
+        Runtime.getRuntime().addShutdownHook(new WebsocketShutdownHook(server));
+        return server;
+    }
+
+    /*@ConditionalOnMissingBean(WebsocketProperties.class)
+    @Bean
+    public WebsocketProperties socketIOConfig(WebsocketProperties socketIOConfig){
+        *//*Configuration socketIOConfig = new Configuration();
         socketIOConfig.setHostname(hostname);
-        socketIOConfig.setPort(port);
+        socketIOConfig.setPort(port);*//*
 
         deployExceptionListener(socketIOConfig);
         deployAuthorizationListener(socketIOConfig);
@@ -46,7 +70,7 @@ public class SocketIOConfiguration extends ApplicationObjectSupport {
         beanPostProcessor(socketIOConfig);
 
         return socketIOConfig;
-    }
+    }*/
 
     private void beanPostProcessor(Configuration socketIOConfig) {
         if (socketIOConfigBeanPostProcessors != null && socketIOConfigBeanPostProcessors.size() > 0){
@@ -71,7 +95,5 @@ public class SocketIOConfiguration extends ApplicationObjectSupport {
             socketIOConfig.setAuthorizationListener((AuthorizationListener)applicationContext.getBean(authorizationListeners[0]));
         }
     }
-
-
 
 }

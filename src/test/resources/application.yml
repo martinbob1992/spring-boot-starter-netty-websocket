@@ -4,3 +4,7 @@ spring:
     database: 14
     password: 123456
     port: 6379
+socket:
+  # 以下配置属性参考netty-socketio进行配置即可 https://github.com/mrniko/netty-socketio/wiki/Configuration-details
+  hostname: localhost
+  port: 9092
