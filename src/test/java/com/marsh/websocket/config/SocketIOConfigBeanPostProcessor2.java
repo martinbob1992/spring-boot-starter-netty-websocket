@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * @date 2021-11-08日 11:56
  */
 @Slf4j
-@Component
+//@Component
 public class SocketIOConfigBeanPostProcessor2 implements ISocketIOConfigBeanPostProcessor {
 
     @Autowired

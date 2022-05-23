@@ -6,6 +6,7 @@ import com.marsh.websocket.interfaces.ISocketIOConfigBeanPostProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * @author Marsh
@@ -13,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Slf4j
 // 开启这个注释启动redis分布式存储功能
-//@Component
+@Component
 public class SocketIOConfigBeanPostProcessor1 implements ISocketIOConfigBeanPostProcessor {
 
     @Autowired
